@@ -1,9 +1,9 @@
-import { fetchGlobalTopAnime, fetchUserAnimeList } from '@/lib/api/mal';
+import { fetchGlobalTopAnime, fetchUserAnimeList, UserAnimeList } from '@/lib/api/mal';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
 export async function updateUserData(username: string) {
-  let data;
+  let data: UserAnimeList;
   if (username === 'global_mock' || username === 'global') {
     data = await fetchGlobalTopAnime();
   } else {
@@ -39,8 +39,7 @@ export async function updateUserData(username: string) {
           title: node.title, 
           mainPicture: node.main_picture?.medium,
           genres: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            connect: node.genres.map((g: any) => ({ id: g.id }))
+            connect: node.genres.map((g) => ({ id: g.id }))
           },
           users: {
             connect: { id: user.id }
@@ -51,8 +50,7 @@ export async function updateUserData(username: string) {
           title: node.title,
           mainPicture: node.main_picture?.medium,
           genres: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            connect: node.genres.map((g: any) => ({ id: g.id }))
+            connect: node.genres.map((g) => ({ id: g.id }))
           },
           users: {
             connect: { id: user.id }
@@ -72,8 +70,7 @@ export async function updateUserData(username: string) {
     const connections: Record<string, number> = {};
     
     for (const anime of userAnime) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const genres = anime.genres.sort((a: any, b: any) => a.id - b.id);
+      const genres = anime.genres.sort((a, b) => a.id - b.id);
       for (let i = 0; i < genres.length; i++) {
         for (let j = i + 1; j < genres.length; j++) {
           const key = `${genres[i].id}-${genres[j].id}`;
@@ -115,8 +112,7 @@ export async function getGenreConnections(context: string) {
   
   // Fetch genre names
   const genreIds = new Set<number>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connections.forEach((c: any) => {
+  connections.forEach((c) => {
     genreIds.add(c.genreAId);
     genreIds.add(c.genreBId);
   });
@@ -125,11 +121,9 @@ export async function getGenreConnections(context: string) {
     where: { id: { in: Array.from(genreIds) } }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const genreMap = new Map(genres.map((g: any) => [g.id, g.name]));
+  const genreMap = new Map(genres.map((g) => [g.id, g.name]));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return connections.map((c: any) => ({
+  return connections.map((c) => ({
     source: genreMap.get(c.genreAId) || 'Unknown',
     target: genreMap.get(c.genreBId) || 'Unknown',
     value: c.count
