@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getGenreConnections, getLastUpdated } from '@/lib/db/cache';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -14,13 +15,6 @@ export default async function Home({ searchParams }: { searchParams: { user?: st
   // Fetch data
   const connections = await getGenreConnections(context);
   const lastUpdated = await getLastUpdated(user || 'global_mock');
-
-  async function updateData() {
-    "use server";
-    // This is a server action, but we are calling an API route in the client component for better feedback control
-    // or we can just do it here.
-    // Let's keep the API route pattern for the client component to call.
-  }
 
   return (
     <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-8">
@@ -50,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams: { user?: st
             </form>
             {user && (
               <Button variant="outline" asChild>
-                <a href="/">Reset to Global</a>
+                <Link href="/">Reset to Global</Link>
               </Button>
             )}
           </div>
@@ -74,7 +68,7 @@ export default async function Home({ searchParams }: { searchParams: { user?: st
                 <GenreNetwork data={connections} />
               ) : (
                 <div className="h-[400px] flex items-center justify-center text-zinc-400">
-                  No data available. Click "Update Data" to fetch.
+                  No data available. Click &quot;Update Data&quot; to fetch.
                 </div>
               )}
             </CardContent>
