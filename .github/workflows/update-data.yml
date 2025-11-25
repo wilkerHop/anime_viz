@@ -1,18 +1,29 @@
-name: Update Data
+name: Update Anime Data
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Every 24 hours
+    # Run daily at 2 AM UTC to update anime data
+    - cron: '0 2 * * *'
   workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Number of top anime to populate'
+        required: false
+        default: '50'
+      enrich_related:
+        description: 'Enrich related anime'
+        required: false
+        default: 'true'
 
 jobs:
-  update:
+  update-anime-data:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     
-    - name: Use Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
@@ -25,13 +36,33 @@ jobs:
       run: npx prisma generate
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        
-    - name: Run Update Script
-      run: |
-        # In a real scenario, this would call a script or an API endpoint
-        # For now, we just log it
-        echo "Updating data..."
-        # node scripts/update-data.js
+    
+    - name: Run database migrations
+      run: npx prisma db push
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+        
+    - name: Populate database with top anime
+      run: |
+        LIMIT=${{ github.event.inputs.limit || '50' }}
+        echo "Populating database with top $LIMIT anime..."
+        npm run populate:db -- --limit $LIMIT
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      continue-on-error: true
+      timeout-minutes: 60
+        
+    - name: Enrich related anime
+      if: ${{ github.event.inputs.enrich_related == 'true' || github.event_name == 'schedule' }}
+      run: |
+        echo "Enriching related anime..."
+        npm run enrich:anime
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      continue-on-error: true
+      timeout-minutes: 30
+    
+    - name: Report completion
+      run: |
+        echo "✅ Data update completed successfully!"
+        echo "Database has been populated and enriched with anime data."

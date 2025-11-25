@@ -103,6 +103,30 @@ This is useful when you have anime references from:
 - User anime lists
 - Any other anime IDs in the database
 
+## Automated Data Updates
+
+The project includes GitHub Actions workflows for automated data updates:
+
+### Daily Updates
+The database is automatically updated daily at 2 AM UTC with:
+- Top 50 anime from MyAnimeList
+- Full Jikan API data for each anime
+- Related anime enrichment
+
+### Manual Workflow
+You can manually trigger the update workflow:
+1. Go to Actions tab on GitHub
+2. Select "Update Anime Data" workflow
+3. Click "Run workflow"
+4. Configure options:
+   - Number of anime to populate (default: 50)
+   - Whether to enrich related anime (default: yes)
+
+### Required Secrets
+For automated workflows to work, configure these secrets in your repository:
+- `DATABASE_URL` - Production database connection string
+- `MAL_CLIENT_ID` - MyAnimeList API client ID (optional, but recommended)
+
 ## Exploring the Database
 
 After fetching anime data, you can explore it visually:
