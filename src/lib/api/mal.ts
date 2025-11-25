@@ -1,4 +1,5 @@
-// Mock data for MyAnimeList API
+const MAL_API_BASE = "https://api.myanimelist.net/v2";
+const CLIENT_ID = process.env.MAL_CLIENT_ID;
 
 export type AnimeNode = {
   id: number;
@@ -13,7 +14,7 @@ export type AnimeNode = {
 export type UserAnimeList = {
   data: {
     node: AnimeNode;
-    list_status: {
+    list_status?: {
       status: string;
       score: number;
       updated_at: string;
@@ -21,59 +22,49 @@ export type UserAnimeList = {
   }[];
 };
 
+async function fetchMAL(endpoint: string, params: Record<string, string> = {}) {
+  if (!CLIENT_ID) {
+    throw new Error("MAL_CLIENT_ID is not set in environment variables");
+  }
+
+  const url = new URL(`${MAL_API_BASE}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "X-MAL-CLIENT-ID": CLIENT_ID,
+    },
+    next: { revalidate: 3600 } // Cache for 1 hour
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Resource not found");
+    }
+    throw new Error(`MAL API Error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function fetchUserAnimeList(username: string): Promise<UserAnimeList> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   console.log(`Fetching anime list for user: ${username}`);
-
-  // Return mock data
-  return {
-    data: [
-      {
-        node: {
-          id: 1,
-          title: "Cowboy Bebop",
-          main_picture: { medium: "https://cdn.myanimelist.net/images/anime/4/19644.jpg", large: "https://cdn.myanimelist.net/images/anime/4/19644l.jpg" },
-          genres: [{ id: 1, name: "Action" }, { id: 24, name: "Sci-Fi" }, { id: 29, name: "Space" }]
-        },
-        list_status: { status: "completed", score: 10, updated_at: new Date().toISOString() }
-      },
-      {
-        node: {
-          id: 20,
-          title: "Naruto",
-          main_picture: { medium: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", large: "https://cdn.myanimelist.net/images/anime/13/17405l.jpg" },
-          genres: [{ id: 1, name: "Action" }, { id: 2, name: "Adventure" }, { id: 27, name: "Shounen" }]
-        },
-        list_status: { status: "completed", score: 8, updated_at: new Date().toISOString() }
-      },
-      {
-        node: {
-          id: 9253,
-          title: "Steins;Gate",
-          main_picture: { medium: "https://cdn.myanimelist.net/images/anime/5/73199.jpg", large: "https://cdn.myanimelist.net/images/anime/5/73199l.jpg" },
-          genres: [{ id: 24, name: "Sci-Fi" }, { id: 41, name: "Thriller" }]
-        },
-        list_status: { status: "completed", score: 9, updated_at: new Date().toISOString() }
-      },
-       {
-        node: {
-          id: 16498,
-          title: "Shingeki no Kyojin",
-          main_picture: { medium: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", large: "https://cdn.myanimelist.net/images/anime/10/47347l.jpg" },
-          genres: [{ id: 1, name: "Action" }, { id: 8, name: "Drama" }, { id: 10, name: "Fantasy" }, { id: 27, name: "Shounen" }]
-        },
-        list_status: { status: "watching", score: 9, updated_at: new Date().toISOString() }
-      }
-    ]
-  };
+  
+  // Fetch user's anime list (limit 1000 for now, paging could be added later)
+  return fetchMAL(`/users/${username}/animelist`, {
+    fields: "list_status,genres,main_picture",
+    limit: "1000",
+    status: "completed" // Focus on completed anime for better connections, or all? Let's get all.
+    // Actually, removing status gets all.
+  });
 }
 
 export async function fetchGlobalTopAnime(): Promise<UserAnimeList> {
-   // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching global top anime");
   
-  // Reuse the same mock structure for simplicity, but imagine this is top 100
-  return fetchUserAnimeList("global_mock");
+  return fetchMAL("/anime/ranking", {
+    ranking_type: "bypopularity", // Popularity gives better genre connections usually
+    limit: "500",
+    fields: "genres,main_picture"
+  });
 }
