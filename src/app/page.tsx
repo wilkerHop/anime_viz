@@ -8,8 +8,8 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: { user?: string } }) {
-  const user = searchParams.user;
+export default async function Home({ searchParams }: { searchParams: Promise<{ user?: string }> }) {
+  const { user } = await searchParams;
   const context = user ? `USER:${user}` : 'USER:global_mock'; // Default to global mock if no user
   
   // Fetch data

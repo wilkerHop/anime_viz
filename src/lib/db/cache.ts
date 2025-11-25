@@ -1,9 +1,14 @@
-import { fetchUserAnimeList } from '@/lib/api/mal';
+import { fetchGlobalTopAnime, fetchUserAnimeList } from '@/lib/api/mal';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
 export async function updateUserData(username: string) {
-  const data = await fetchUserAnimeList(username);
+  let data;
+  if (username === 'global_mock' || username === 'global') {
+    data = await fetchGlobalTopAnime();
+  } else {
+    data = await fetchUserAnimeList(username);
+  }
   
   // Transaction to update DB
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
