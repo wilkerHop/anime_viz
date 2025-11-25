@@ -1,12 +1,23 @@
 import { fetchGlobalTopAnime, fetchUserAnimeList, UserAnimeList } from '@/lib/api/mal';
 import { prisma } from '@/lib/db';
+import { fetchAndStoreAnimeDetails } from '@/lib/services/jikan-service';
 import { Prisma } from '@prisma/client';
 
+/**
+ * Update user anime data
+ * Fetches user's anime list from MAL, then enriches each anime with Jikan data
+ */
 export async function updateUserData(username: string) {
+  console.log(`[Cache] Updating data for user: ${username}`);
+  
   let data: UserAnimeList;
+  
+  // For global/mock user, we'll populate with top anime
   if (username === 'global_mock' || username === 'global') {
+    // Fetch top anime from MAL
     data = await fetchGlobalTopAnime();
   } else {
+    // Fetch specific user's list
     data = await fetchUserAnimeList(username);
   }
   
@@ -19,54 +30,42 @@ export async function updateUserData(username: string) {
       create: { username, lastUpdated: new Date() }
     });
 
-    // Process Anime and Genres
+    console.log(`[Cache] Processing ${data.data.length} anime for ${username}`);
+
+    // Process each anime
     for (const item of data.data) {
       const { node } = item;
       
-      // Upsert Genres
-      for (const genre of node.genres) {
-        await tx.genre.upsert({
-          where: { id: genre.id },
-          update: { name: genre.name },
-          create: { id: genre.id, name: genre.name }
+      try {
+        // Fetch full Jikan data for this anime
+        console.log(`[Cache] Enriching anime ${node.id}: ${node.title}`);
+        await fetchAndStoreAnimeDetails(node.id);
+        
+        // Connect anime to user
+        await tx.anime.update({
+          where: { id: node.id },
+          data: {
+            users: {
+              connect: { id: user.id }
+            }
+          }
         });
+      } catch (error) {
+        console.error(`[Cache] Failed to enrich anime ${node.id}:`, error);
+        // Continue with next anime even if one fails
       }
-
-      // Upsert Anime
-      await tx.anime.upsert({
-        where: { id: node.id },
-        update: { 
-          title: node.title, 
-          mainPicture: node.main_picture?.medium,
-          genres: {
-            connect: node.genres.map((g) => ({ id: g.id }))
-          },
-          users: {
-            connect: { id: user.id }
-          }
-        },
-        create: {
-          id: node.id,
-          title: node.title,
-          mainPicture: node.main_picture?.medium,
-          genres: {
-            connect: node.genres.map((g) => ({ id: g.id }))
-          },
-          users: {
-            connect: { id: user.id }
-          }
-        }
-      });
     }
 
     // Calculate Genre Connections for this user
+    console.log(`[Cache] Calculating genre connections for ${username}`);
+    
     // 1. Get all anime for this user with their genres
     const userAnime = await tx.anime.findMany({
       where: { users: { some: { id: user.id } } },
       include: { genres: true }
     });
 
-    // 2. Count pairs
+    // 2. Count genre pairs
     const connections: Record<string, number> = {};
     
     for (const anime of userAnime) {
@@ -80,9 +79,7 @@ export async function updateUserData(username: string) {
     }
 
     // 3. Save Connections
-    // Clear old connections for this user context? 
-    // For simplicity, we'll just upsert/overwrite. In a real app, we might want to clear old ones first if they no longer exist.
-    // But since we are adding up, let's delete all user context connections first to be safe.
+    // Clear old connections for this user context
     await tx.genreConnection.deleteMany({
       where: { context: `USER:${username}` }
     });
@@ -98,11 +95,17 @@ export async function updateUserData(username: string) {
         }
       });
     }
+
+    console.log(`[Cache] Created ${Object.keys(connections).length} genre connections`);
   });
 
+  console.log(`[Cache] ✅ Successfully updated data for ${username}`);
   return { success: true };
 }
 
+/**
+ * Get genre connections for visualization
+ */
 export async function getGenreConnections(context: string) {
   const connections = await prisma.genreConnection.findMany({
     where: { context },
@@ -130,6 +133,9 @@ export async function getGenreConnections(context: string) {
   }));
 }
 
+/**
+ * Get last updated timestamp
+ */
 export async function getLastUpdated(username?: string) {
   if (username) {
     const user = await prisma.userProfile.findUnique({ where: { username } });
