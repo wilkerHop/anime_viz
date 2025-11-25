@@ -2,15 +2,20 @@ import GenreNetwork from '@/components/charts/GenreNetwork';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import UpdateControlsWrapper from '@/components/UpdateControlsWrapper';
 import { getGenreConnections, getLastUpdated } from '@/lib/db/cache';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ user?: string }> }) {
+export default async function Home({ 
+  searchParams,
+}: { 
+  searchParams: Promise<{ user?: string }>;
+}) {
   const { user } = await searchParams;
-  const context = user ? `USER:${user}` : 'USER:global_mock'; // Default to global mock if no user
+  const context = user ? `USER:${user}` : 'USER:global_mock';
   
   // Fetch data
   const connections = await getGenreConnections(context);
@@ -21,9 +26,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ u
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Anime Insights</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Anime Data Visualization
+            </h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-2">
-              Visualizing genre connections and trends from MyAnimeList.
+              Explore anime genre connections from MyAnimeList
             </p>
           </div>
           
@@ -36,7 +43,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ u
             }} className="flex gap-2">
                <Input 
                 name="username" 
-                placeholder="Enter MAL Username..." 
+                placeholder="Enter username"
                 defaultValue={user || ''}
                 className="w-64 bg-white dark:bg-zinc-900"
               />
@@ -57,7 +64,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ u
                 <div>
                   <CardTitle>Genre Connections</CardTitle>
                   <CardDescription>
-                    {user ? `Showing data for user: ${user}` : 'Showing Global Aggregate Data'}
+                    {user ? `Showing data for user: ${user}` : 'Showing global data'}
                   </CardDescription>
                 </div>
                 <UpdateControlsWrapper lastUpdated={lastUpdated} username={user} />
@@ -68,7 +75,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ u
                 <GenreNetwork data={connections} />
               ) : (
                 <div className="h-[400px] flex items-center justify-center text-zinc-400">
-                  No data available. Click &quot;Update Data&quot; to fetch.
+                  No data available. Try searching for a user or wait for global data to load.
                 </div>
               )}
             </CardContent>
@@ -78,6 +85,3 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ u
     </main>
   );
 }
-
-// Client wrapper for UpdateControls to handle the API call
-import UpdateControlsWrapper from '@/components/UpdateControlsWrapper';

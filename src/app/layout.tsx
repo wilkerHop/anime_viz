@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Anime Insights",
-  description: "Visualize anime genre connections and trends",
+  title: "Anime Data Visualization",
+  description: "Visualize anime data with comprehensive information from MyAnimeList via the Jikan API",
 };
 
 export default function RootLayout({
