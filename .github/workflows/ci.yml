@@ -32,7 +32,15 @@ jobs:
       
     - name: Type Check
       run: npx tsc --noEmit
-      
+          
+    - name: Run Tests
+      env:
+        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+      run: |
+        npm test
+        npx playwright install --with-deps
+        npx playwright test
+
     - name: Build
       run: npm run build
       env:

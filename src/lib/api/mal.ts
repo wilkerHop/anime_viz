@@ -1,5 +1,4 @@
 const MAL_API_BASE = "https://api.myanimelist.net/v2";
-const CLIENT_ID = process.env.MAL_CLIENT_ID;
 
 export type AnimeNode = {
   id: number;
@@ -23,6 +22,7 @@ export type UserAnimeList = {
 };
 
 async function fetchMAL(endpoint: string, params: Record<string, string> = {}) {
+  const CLIENT_ID = process.env.MAL_CLIENT_ID;
   if (!CLIENT_ID) {
     throw new Error("MAL_CLIENT_ID is not set in environment variables");
   }
