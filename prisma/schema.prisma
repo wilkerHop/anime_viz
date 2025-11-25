@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// USER & PROFILE
+// ==========================================
+
 model UserProfile {
   id          String   @id @default(cuid())
   username    String   @unique
@@ -17,19 +21,188 @@ model UserProfile {
   animeList   Anime[]
 }
 
+// ==========================================
+// ANIME (Main Aggregate)
+// ==========================================
+
 model Anime {
-  id          Int      @id
-  title       String
-  mainPicture String?
-  genres      Genre[]
-  users       UserProfile[]
+  id             Int      @id
+  title          String
+  titleEnglish   String?
+  titleJapanese  String?
+  
+  // Media Details
+  type           String?  // TV, Movie, OVA, etc.
+  status         String?  // Finished Airing, Currently Airing, etc.
+  episodes       Int?
+  duration       String?
+  rating         String?
+  source         String?  // Manga, Light Novel, etc.
+  
+  // Dates
+  airedString    String?
+  airedFrom      DateTime?
+  airedTo        DateTime?
+  season         String?
+  year           Int?
+  
+  // Content
+  mainPicture    String?
+  synopsis       String?
+  background     String?
+  
+  // Statistics
+  score          Float?
+  scoredBy       Int?
+  ranked         Int?
+  popularity     Int?
+  members        Int?
+  favorites      Int?
+  
+  // Relations
+  genres         Genre[]
+  users          UserProfile[]
+  companies      AnimeCompany[]
+  themes         AnimeTheme[]
+  characters     AnimeCharacter[]
+  staff          AnimeStaff[]
+  relatedAnime   RelatedAnime[]  @relation("AnimeRelations")
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
+
+// ==========================================
+// GENRE
+// ==========================================
 
 model Genre {
   id    Int     @id
   name  String  @unique
   anime Anime[]
 }
+
+// ==========================================
+// COMPANY (Studios, Producers, Licensors)
+// ==========================================
+
+model Company {
+  id     Int            @id
+  name   String         @unique
+  animes AnimeCompany[]
+}
+
+model AnimeCompany {
+  id        String  @id @default(cuid())
+  animeId   Int
+  companyId Int
+  type      String  // Producer, Licensor, Studio
+  
+  anime     Anime   @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([animeId, companyId, type])
+}
+
+// ==========================================
+// PERSON (Voice Actors & Staff)
+// ==========================================
+
+model Person {
+  id           Int                      @id
+  name         String
+  image        String?
+  
+  voiceActing  VoiceActorAssignment[]
+  staffRoles   AnimeStaff[]
+}
+
+// ==========================================
+// CHARACTER
+// ==========================================
+
+model Character {
+  id          Int                @id
+  name        String
+  image       String?
+  
+  animeRoles  AnimeCharacter[]
+}
+
+model AnimeCharacter {
+  id          String                   @id @default(cuid())
+  animeId     Int
+  characterId Int
+  role        String                   // Main, Supporting
+  
+  anime       Anime                    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  character   Character                @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  voiceActors VoiceActorAssignment[]
+  
+  @@unique([animeId, characterId])
+}
+
+model VoiceActorAssignment {
+  id               String         @id @default(cuid())
+  animeCharacterId String
+  personId         Int
+  language         String
+  
+  animeCharacter   AnimeCharacter @relation(fields: [animeCharacterId], references: [id], onDelete: Cascade)
+  person           Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  @@unique([animeCharacterId, personId, language])
+}
+
+// ==========================================
+// STAFF
+// ==========================================
+
+model AnimeStaff {
+  id       String @id @default(cuid())
+  animeId  Int
+  personId Int
+  role     String  // Director, Music, etc.
+  
+  anime    Anime  @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  @@unique([animeId, personId, role])
+}
+
+// ==========================================
+// THEMES (OP/ED)
+// ==========================================
+
+model AnimeTheme {
+  id      String @id @default(cuid())
+  animeId Int
+  type    String // Opening, Ending
+  text    String
+  
+  anime   Anime  @relation(fields: [animeId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// RELATED ANIME
+// ==========================================
+
+model RelatedAnime {
+  id               String @id @default(cuid())
+  animeId          Int
+  relatedAnimeId   Int?   // Made optional since related anime may not be in DB
+  relationType     String  // Sequel, Prequel, etc.
+  relatedAnimeTitle String
+  
+  anime            Anime  @relation("AnimeRelations", fields: [animeId], references: [id], onDelete: Cascade)
+  // Note: No foreign key to relatedAnime - it may not exist in DB yet
+  
+  @@unique([animeId, relatedAnimeId, relationType])
+}
+
+// ==========================================
+// GENRE CONNECTIONS (For Visualization)
+// ==========================================
 
 model GenreConnection {
   id        String @id @default(cuid())
@@ -40,6 +213,10 @@ model GenreConnection {
 
   @@unique([genreAId, genreBId, context])
 }
+
+// ==========================================
+// METADATA & STATS
+// ==========================================
 
 model GlobalStats {
   id          String   @id @default("global")
