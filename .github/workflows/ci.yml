@@ -25,25 +25,32 @@ jobs:
     - name: Generate Prisma Client
       run: npx prisma generate
       env:
-        DATABASE_URL: "file:./dev.db" # Mock for CI
-        
+        DATABASE_URL: "file:./dev.db"
+
     - name: Lint
       run: npm run lint
       
     - name: Type Check
       run: npx tsc --noEmit
-          
-    - name: Run Tests
-      env:
-        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
-        DATABASE_URL: "file:./dev.db"
-      run: |
-        npx prisma db push
-        npm test
-        npx playwright install --with-deps
-        npx playwright test
 
     - name: Build
       run: npm run build
       env:
         DATABASE_URL: "file:./dev.db"
+        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+
+    - name: Unit Tests
+      env:
+        MAL_CLIENT_ID: "test-client-id" # Mock for unit tests
+      run: npm test
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: E2E Tests
+      env:
+        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+        DATABASE_URL: "file:./dev.db"
+      run: |
+        npx prisma db push
+        npx playwright test
