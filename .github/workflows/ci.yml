@@ -49,8 +49,11 @@ jobs:
 
     - name: E2E Tests
       env:
-        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+        MAL_API_BASE: "http://localhost:4000"
+        MAL_CLIENT_ID: "dummy"
         DATABASE_URL: "file:./dev.db"
       run: |
+        npx ts-node e2e/mocks/server.ts &
+        sleep 5
         npx prisma db push
         npx playwright test

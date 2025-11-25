@@ -1,4 +1,4 @@
-const MAL_API_BASE = "https://api.myanimelist.net/v2";
+const MAL_API_BASE = process.env.MAL_API_BASE || "https://api.myanimelist.net/v2";
 
 export type AnimeNode = {
   id: number;
