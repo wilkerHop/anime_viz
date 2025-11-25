@@ -1,3 +1,23 @@
+/**
+ * MyAnimeList API v2 Client
+ * 
+ * PURPOSE: This client is used ONLY for fetching anime IDs from:
+ * - User anime lists (Jikan doesn't support user-specific data)
+ * - Top anime rankings (to know which anime to enrich with Jikan)
+ * 
+ * IMPORTANT: This does NOT fetch detailed anime data anymore.
+ * All detailed data (characters, staff, themes, etc.) comes from Jikan API.
+ * 
+ * WORKFLOW:
+ * 1. Fetch anime IDs from MAL (user lists or rankings)
+ * 2. Enrich each anime with full Jikan data
+ * 3. Store in database with all relationships
+ * 
+ * REQUIREMENTS:
+ * - MAL_CLIENT_ID environment variable must be set
+ * - Get one from: https://myanimelist.net/apiconfig
+ */
+
 const MAL_API_BASE = process.env.MAL_API_BASE || "https://api.myanimelist.net/v2";
 
 export type AnimeNode = {
@@ -16,9 +36,14 @@ export type UserAnimeList = {
     list_status?: {
       status: string;
       score: number;
+      num_episodes_watched: number;
+      is_rewatching: boolean;
       updated_at: string;
     };
   }[];
+  paging?: {
+    next?: string;
+  };
 };
 
 async function fetchMAL(endpoint: string, params: Record<string, string> = {}) {
@@ -47,23 +72,29 @@ async function fetchMAL(endpoint: string, params: Record<string, string> = {}) {
   return response.json();
 }
 
+/**
+ * Fetch a user's anime list
+ * Returns anime IDs that will be enriched with Jikan data
+ */
 export async function fetchUserAnimeList(username: string): Promise<UserAnimeList> {
-  console.log(`Fetching anime list for user: ${username}`);
+  console.log(`[MAL] Fetching anime list for user: ${username}`);
   
-  // Fetch user's anime list (limit 1000 for now, paging could be added later)
   return fetchMAL(`/users/${username}/animelist`, {
     fields: "list_status,genres,main_picture",
     limit: "1000",
-    status: "completed" // Focus on completed anime for better connections, or all? Let's get all.
-    // Actually, removing status gets all.
+    // Note: Not filtering by status to get all anime
   });
 }
 
+/**
+ * Fetch top anime from MAL rankings
+ * Returns anime IDs that will be enriched with Jikan data
+ */
 export async function fetchGlobalTopAnime(): Promise<UserAnimeList> {
-  console.log("Fetching global top anime");
+  console.log("[MAL] Fetching global top anime");
   
   return fetchMAL("/anime/ranking", {
-    ranking_type: "bypopularity", // Popularity gives better genre connections usually
+    ranking_type: "bypopularity",
     limit: "500",
     fields: "genres,main_picture"
   });
