@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "test:jikan": "tsx src/scripts/jikan-integration.ts",
     "test:db-sync": "tsx src/scripts/test-db-sync.ts",
-    "enrich:anime": "tsx src/scripts/enrich-anime.ts"
+    "enrich:anime": "tsx src/scripts/enrich-anime.ts",
+    "populate:db": "tsx src/scripts/populate-database.ts"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.14.4",
