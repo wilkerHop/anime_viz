@@ -36,7 +36,9 @@ jobs:
     - name: Run Tests
       env:
         MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
+        DATABASE_URL: "file:./dev.db"
       run: |
+        npx prisma db push
         npm test
         npx playwright install --with-deps
         npx playwright test
