@@ -1,65 +1,89 @@
-import Image from "next/image";
+import GenreNetwork from '@/components/charts/GenreNetwork';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { getGenreConnections, getLastUpdated } from '@/lib/db/cache';
+import { redirect } from 'next/navigation';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home({ searchParams }: { searchParams: { user?: string } }) {
+  const user = searchParams.user;
+  const context = user ? `USER:${user}` : 'USER:global_mock'; // Default to global mock if no user
+  
+  // Fetch data
+  const connections = await getGenreConnections(context);
+  const lastUpdated = await getLastUpdated(user || 'global_mock');
+
+  async function updateData() {
+    "use server";
+    // This is a server action, but we are calling an API route in the client component for better feedback control
+    // or we can just do it here.
+    // Let's keep the API route pattern for the client component to call.
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Anime Insights</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">
+              Visualizing genre connections and trends from MyAnimeList.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <form action={async (formData) => {
+              "use server";
+              const username = formData.get('username');
+              if (username) redirect(`/?user=${username}`);
+              else redirect('/');
+            }} className="flex gap-2">
+               <Input 
+                name="username" 
+                placeholder="Enter MAL Username..." 
+                defaultValue={user || ''}
+                className="w-64 bg-white dark:bg-zinc-900"
+              />
+              <Button type="submit">Search</Button>
+            </form>
+            {user && (
+              <Button variant="outline" asChild>
+                <a href="/">Reset to Global</a>
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid grid-cols-1 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Genre Connections</CardTitle>
+                  <CardDescription>
+                    {user ? `Showing data for user: ${user}` : 'Showing Global Aggregate Data'}
+                  </CardDescription>
+                </div>
+                <UpdateControlsWrapper lastUpdated={lastUpdated} username={user} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {connections.length > 0 ? (
+                <GenreNetwork data={connections} />
+              ) : (
+                <div className="h-[400px] flex items-center justify-center text-zinc-400">
+                  No data available. Click "Update Data" to fetch.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
+
+// Client wrapper for UpdateControls to handle the API call
+import UpdateControlsWrapper from '@/components/UpdateControlsWrapper';

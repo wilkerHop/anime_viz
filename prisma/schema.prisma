@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  lastUpdated DateTime @default(now())
+  animeList   Anime[]
+}
+
+model Anime {
+  id          Int      @id
+  title       String
+  mainPicture String?
+  genres      Genre[]
+  users       UserProfile[]
+}
+
+model Genre {
+  id    Int     @id
+  name  String  @unique
+  anime Anime[]
+}
+
+model GenreConnection {
+  id        String @id @default(cuid())
+  genreAId  Int
+  genreBId  Int
+  count     Int
+  context   String // "GLOBAL" or "USER:{username}"
+
+  @@unique([genreAId, genreBId, context])
+}
+
+model GlobalStats {
+  id          String   @id @default("global")
+  lastUpdated DateTime @default(now())
+}
+
+model DataSnapshot {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  path      String
+  type      String // "GLOBAL" or "USER"
+}

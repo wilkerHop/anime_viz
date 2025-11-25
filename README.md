@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Anime Data Visualization
 
-## Getting Started
+A Next.js 15 application to visualize anime genre connections using data from MyAnimeList.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Genre Connections Diagram**: Interactive Chord Diagram showing how often genres appear together.
+- **Dual Context**: Switch between Global aggregate data and Specific User data.
+- **Automated Caching**: Data is cached in a database (SQLite/Postgres) and updated automatically every 24 hours.
+- **Manual Updates**: Users can trigger updates with a cooldown mechanism.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Database**: Prisma ORM (SQLite for Dev, compatible with Postgres/Supabase)
+- **Visualization**: amCharts 5
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup
 
-## Learn More
+1.  **Clone the repository**
+    ```bash
+    git clone <repo-url>
+    cd anime_viz
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3.  **Setup Database**
+    ```bash
+    # Create .env file
+    echo 'DATABASE_URL="file:./dev.db"' > .env
+    
+    # Push schema to database
+    npx prisma db push
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Data Fetching**: `lib/api/mal.ts` (Currently mocks MAL API)
+- **Database Logic**: `lib/db/cache.ts` handles caching and updates.
+- **Visualization**: `components/charts/GenreNetwork.tsx` uses amCharts.
+- **Automation**: GitHub Actions in `.github/workflows`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+The application is designed to be deployed on Vercel or similar platforms. 
+Ensure `DATABASE_URL` is set to your production database (e.g., Supabase).

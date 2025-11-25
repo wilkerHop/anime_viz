@@ -1,0 +1,37 @@
+name: Update Data
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every 24 hours
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Generate Prisma Client
+      run: npx prisma generate
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        
+    - name: Run Update Script
+      run: |
+        # In a real scenario, this would call a script or an API endpoint
+        # For now, we just log it
+        echo "Updating data..."
+        # node scripts/update-data.js
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
