@@ -7,60 +7,105 @@ on:
     branches: [ main ]
 
 jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate current commit (last commit)
+        run: npx commitlint --from HEAD~1 --to HEAD --verbose
+
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Check for Sins
+        run: |
+          if grep -rE "eslint-disable|@ts-ignore|@ts-nocheck|@ts-expect-error" src/; then
+            echo "Found TypeScript sins! Please remove them."
+            exit 1
+          fi
+      - name: Type Check
+        run: npx tsc --noEmit
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "file:./dev.db"
+      - name: Unit Tests
+        env:
+          MAL_CLIENT_ID: "test-client-id"
+        run: npm test
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: E2E Tests
+        env:
+          MAL_API_BASE: "http://localhost:4000"
+          MAL_CLIENT_ID: "dummy"
+          DATABASE_URL: "file:./dev.db"
+        run: |
+          npx ts-node e2e/mocks/server.ts &
+          sleep 5
+          npx prisma db push
+          npx playwright test
+
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Generate Prisma Client
-      run: npx prisma generate
-      env:
-        DATABASE_URL: "file:./dev.db"
-
-    - name: Lint
-      run: npm run lint
-
-    - name: Check for Sins
-      run: |
-        if grep -rE "eslint-disable|@ts-ignore|@ts-nocheck|@ts-expect-error" src/; then
-          echo "Found TypeScript sins! Please remove them."
-          exit 1
-        fi
-      
-    - name: Type Check
-      run: npx tsc --noEmit
-
-    - name: Build
-      run: npm run build
-      env:
-        DATABASE_URL: "file:./dev.db"
-        MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
-
-    - name: Unit Tests
-      env:
-        MAL_CLIENT_ID: "test-client-id" # Mock for unit tests
-      run: npm test
-
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-
-    - name: E2E Tests
-      env:
-        MAL_API_BASE: "http://localhost:4000"
-        MAL_CLIENT_ID: "dummy"
-        DATABASE_URL: "file:./dev.db"
-      run: |
-        npx ts-node e2e/mocks/server.ts &
-        sleep 5
-        npx prisma db push
-        npx playwright test
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "file:./dev.db"
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: "file:./dev.db"
+          MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
