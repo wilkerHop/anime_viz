@@ -77,6 +77,32 @@ npm test
 npm run test:e2e
 ```
 
+## Anime Data Enrichment
+
+You can automatically fetch missing anime data for all references in your database:
+
+```bash
+# Enrich all missing anime (related anime, etc.)
+npm run enrich:anime
+
+# Enrich all + their related anime (recursive)
+npm run enrich:anime -- --all
+
+# Enrich only first 5 missing anime
+npm run enrich:anime -- --limit 5
+
+# Enrich specific anime by MAL ID
+npm run enrich:anime -- --anime 52991
+
+# Enrich specific anime + its related anime
+npm run enrich:anime -- --anime 52991 --related
+```
+
+This is useful when you have anime references from:
+- Related anime (sequels, prequels, side stories)
+- User anime lists
+- Any other anime IDs in the database
+
 ## Exploring the Database
 
 After fetching anime data, you can explore it visually:

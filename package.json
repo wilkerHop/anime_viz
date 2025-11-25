@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
     "test:jikan": "tsx src/scripts/jikan-integration.ts",
-    "test:db-sync": "tsx src/scripts/test-db-sync.ts"
+    "test:db-sync": "tsx src/scripts/test-db-sync.ts",
+    "enrich:anime": "tsx src/scripts/enrich-anime.ts"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.14.4",
