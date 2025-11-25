@@ -1,13 +1,15 @@
 # Anime Data Visualization
 
-A Next.js 15 application to visualize anime genre connections using data from MyAnimeList.
+A Next.js 15 application to visualize anime data with comprehensive information from MyAnimeList via the Jikan API.
 
 ## Features
 
-- **Genre Connections Diagram**: Interactive Chord Diagram showing how often genres appear together.
-- **Dual Context**: Switch between Global aggregate data and Specific User data.
-- **Automated Caching**: Data is cached in a database (SQLite/Postgres) and updated automatically every 24 hours.
-- **Manual Updates**: Users can trigger updates with a cooldown mechanism.
+- **Rich Anime Data**: Characters, voice actors, staff, studios, themes, and more from Jikan API v4
+- **Genre Connections Diagram**: Interactive Chord Diagram showing how often genres appear together
+- **Dual Context**: Switch between Global aggregate data and Specific User data
+- **Comprehensive Database**: Stores complete anime metadata, characters, staff, companies, and themes
+- **No Authentication Required**: Uses free Jikan API (no API keys needed)
+- **Automated Caching**: Data is cached in a database and can be updated on demand
 
 ## Tech Stack
 
@@ -15,6 +17,7 @@ A Next.js 15 application to visualize anime genre connections using data from My
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS, shadcn/ui
 - **Database**: Prisma ORM (SQLite for Dev, compatible with Postgres/Supabase)
+- **API**: Jikan API v4 (MyAnimeList data)
 - **Visualization**: amCharts 5
 
 ## Setup
@@ -32,7 +35,7 @@ A Next.js 15 application to visualize anime genre connections using data from My
 
 3.  **Setup Database**
     ```bash
-    # Create .env file
+    # Create .env file (no API key needed for Jikan!)
     echo 'DATABASE_URL="file:./dev.db"' > .env
     
     # Push schema to database
@@ -47,15 +50,102 @@ A Next.js 15 application to visualize anime genre connections using data from My
 
 ## Architecture
 
-- **Data Fetching**: `lib/api/mal.ts` (Currently mocks MAL API)
-- **Database Logic**: `lib/db/cache.ts` handles caching and updates.
-- **Visualization**: `components/charts/GenreNetwork.tsx` uses amCharts.
-- **Automation**: GitHub Actions in `.github/workflows`.
+- **Data Fetching**: 
+  - `lib/api/jikan-client.ts` - Jikan API client with rate limiting
+  - `lib/api/jikan-mapper.ts` - Data transformation layer
+  - `lib/api/jikan-types.ts` - TypeScript type definitions
+- **Service Layer**: `lib/services/jikan-service.ts` - Data synchronization
+- **Database**: Comprehensive Prisma schema with 15+ models
+- **Visualization**: `components/charts/GenreNetwork.tsx` uses amCharts
+- **Automation**: GitHub Actions in `.github/workflows`
+
+## Testing
+
+The project includes comprehensive tests for the Jikan API integration:
+
+```bash
+# Test API integration (fetches live data)
+npm run test:jikan
+
+# Test database synchronization
+npm run test:db-sync
+
+# Run unit tests
+npm test
+
+# Run E2E tests
+npm run test:e2e
+```
+
+## Exploring the Database
+
+After fetching anime data, you can explore it visually:
+
+```bash
+npx prisma studio
+```
+
+This opens a web interface to browse all anime, characters, voice actors, staff, and more.
 
 ## Deployment
 
 The application is designed to be deployed on Vercel or similar platforms. 
 Ensure `DATABASE_URL` is set to your production database (e.g., Supabase).
+
+## Jikan API Integration
+
+The project uses the [Jikan API v4](https://jikan.moe/) to fetch comprehensive anime data:
+
+### What Data Is Available?
+
+- **Anime Metadata**: Titles, type, status, episodes, duration, rating, source
+- **Statistics**: Score, ranking, popularity, members, favorites
+- **Dates**: Aired dates, season, year
+- **Content**: Synopsis, background, images
+- **Genres**: Genres, themes, demographics
+- **Companies**: Studios, producers, licensors
+- **Characters**: Name, image, role (Main/Supporting)
+- **Voice Actors**: Person info with language
+- **Staff**: Directors, music, animation staff
+- **Themes**: Opening and ending songs
+- **Related Anime**: Sequels, prequels, side stories
+
+### Rate Limiting
+
+The Jikan API has a rate limit of 1 request per second. The integration handles this automatically:
+
+- Requests are automatically spaced 1 second apart
+- Failed requests are retried with exponential backoff
+- Configurable via `JIKAN_RATE_LIMIT_MS` environment variable
+
+### Example Usage
+
+```typescript
+import { fetchAndStoreAnimeDetails } from '@/lib/services/jikan-service';
+
+// Fetch and store anime data
+await fetchAndStoreAnimeDetails(52991); // Frieren: Beyond Journey's End
+```
+
+### Database Schema
+
+The Prisma schema includes the following models:
+
+- `Anime` - Main anime information
+- `Genre` - Genre information
+- `Company` - Studios, producers, licensors
+- `Person` - Voice actors and staff
+- `Character` - Character information
+- `AnimeCompany` - Anime-company relation
+- `AnimeCharacter` - Anime-character relation
+- `VoiceActorAssignment` - Character-voice actor relation
+- `AnimeStaff` - Anime-staff relation
+- `AnimeTheme` - Opening/ending themes
+- `RelatedAnime` - Related anime entries
+- `GenreConnection` - Genre co-occurrence data
+- `UserProfile` - User anime lists
+- `GlobalStats` - Metadata
+- `DataSnapshot` - Cache snapshots
 
 ## Integration Guide for AI Agents
 
