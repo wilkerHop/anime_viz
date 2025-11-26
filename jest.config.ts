@@ -14,8 +14,12 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^p-queue$': '<rootDir>/__mocks__/p-queue.js',
   },
   testPathIgnorePatterns: ['<rootDir>/e2e/'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(p-queue|p-timeout|p-retry|yocto-queue)/)',
+  ],
 }
  
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

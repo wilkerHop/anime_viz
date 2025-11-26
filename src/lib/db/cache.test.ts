@@ -34,6 +34,10 @@ jest.mock('@/lib/api/mal', () => ({
   fetchGlobalTopAnime: jest.fn(),
 }));
 
+jest.mock('@/lib/services/jikan-service', () => ({
+  fetchAndStoreAnimeDetails: jest.fn().mockResolvedValue(undefined),
+}));
+
 describe('Cache Logic', () => {
   beforeEach(() => {
     jest.clearAllMocks();
