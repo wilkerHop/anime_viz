@@ -3,14 +3,14 @@
 import { BrutalTheme } from '@/lib/charts/brutal-theme';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 
 interface ScoreData {
   range: string;
   count: number;
 }
 
-export default function ScoreDistribution({ data }: { data: ScoreData[] }) {
+function ScoreDistribution({ data }: { data: ScoreData[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -115,3 +115,5 @@ export default function ScoreDistribution({ data }: { data: ScoreData[] }) {
     />
   );
 }
+
+export default memo(ScoreDistribution);

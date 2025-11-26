@@ -17,8 +17,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Anime Insights",
-  description: "Bold anime data visualization powered by MyAnimeList and Jikan API",
+  title: "AnimeViz | Neo-Brutal Anime Analytics",
+  description: "Explore anime trends, statistics, and connections with a bold neo-brutalist design.",
+  openGraph: {
+    title: "AnimeViz | Neo-Brutal Anime Analytics",
+    description: "Explore anime trends, statistics, and connections with a bold neo-brutalist design.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

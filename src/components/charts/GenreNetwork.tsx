@@ -3,7 +3,7 @@
 import { BrutalTheme } from '@/lib/charts/brutal-theme';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5flow from "@amcharts/amcharts5/flow";
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 
 type GenreConnection = {
   source: string;
@@ -11,7 +11,7 @@ type GenreConnection = {
   value: number;
 };
 
-export default function GenreNetwork({ data }: { data: GenreConnection[] }) {
+function GenreNetwork({ data }: { data: GenreConnection[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -73,3 +73,5 @@ export default function GenreNetwork({ data }: { data: GenreConnection[] }) {
     <div ref={chartRef} className="w-full h-[600px] border rounded-lg shadow-sm bg-white dark:bg-zinc-900" />
   );
 }
+
+export default memo(GenreNetwork);

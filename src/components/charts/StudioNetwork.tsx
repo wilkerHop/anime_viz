@@ -3,7 +3,7 @@
 import { BrutalTheme } from '@/lib/charts/brutal-theme';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5hierarchy from "@amcharts/amcharts5/hierarchy";
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 
 interface StudioNode {
   name: string;
@@ -16,7 +16,7 @@ interface StudioNetworkData {
   children: StudioNode[];
 }
 
-export default function StudioNetwork({ data }: { data: StudioNetworkData }) {
+function StudioNetwork({ data }: { data: StudioNetworkData }) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -100,3 +100,5 @@ export default function StudioNetwork({ data }: { data: StudioNetworkData }) {
     />
   );
 }
+
+export default memo(StudioNetwork);

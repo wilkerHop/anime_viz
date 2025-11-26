@@ -3,14 +3,14 @@
 import { BrutalTheme } from '@/lib/charts/brutal-theme';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 
 interface SeasonalData {
   label: string;
   count: number;
 }
 
-export default function SeasonalTrends({ data }: { data: SeasonalData[] }) {
+function SeasonalTrends({ data }: { data: SeasonalData[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -120,3 +120,5 @@ export default function SeasonalTrends({ data }: { data: SeasonalData[] }) {
     />
   );
 }
+
+export default memo(SeasonalTrends);
