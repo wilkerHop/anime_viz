@@ -5,13 +5,11 @@ import path from 'path';
 const SRC_DIR = path.join(process.cwd(), 'src');
 
 // Regex to detect exported functions/classes
-const EXPORTED_FUNCTION_REGEX = /export\s+(async\s+)?(function\s+\w+|const\s+\w+\s*=\s*(\(.*\)|async\s*\(.*\))\s*=>|class\s+\w+)/;
+export const EXPORTED_FUNCTION_REGEX = /export\s+(async\s+)?(function\s+\w+|const\s+\w+\s*=\s*(\(.*\)|async\s*\(.*\))\s*=>|class\s+\w+)/;
 
-function getChangedFiles(): string[] {
+export function getChangedFiles(command = 'git diff --name-only HEAD~1 HEAD'): string[] {
   try {
-    // Get list of changed files between HEAD and previous commit
-    // In CI, we might need to adjust this depending on how checkout is done
-    const output = execSync('git diff --name-only HEAD~1 HEAD', { encoding: 'utf-8' });
+    const output = execSync(command, { encoding: 'utf-8' });
     return output.split('\n').filter(Boolean).map(f => path.resolve(process.cwd(), f));
   } catch (error) {
     console.warn('Could not determine changed files via git diff. Checking all files? No, skipping.');
@@ -19,7 +17,7 @@ function getChangedFiles(): string[] {
   }
 }
 
-function hasExportedFunction(filePath: string): boolean {
+export function hasExportedFunction(filePath: string): boolean {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     return EXPORTED_FUNCTION_REGEX.test(content);
@@ -28,7 +26,7 @@ function hasExportedFunction(filePath: string): boolean {
   }
 }
 
-function checkTests() {
+export function checkTests() {
   const changedFiles = getChangedFiles();
   const missingTests: string[] = [];
 
@@ -72,4 +70,7 @@ function checkTests() {
   }
 }
 
-checkTests();
+// Execute only if run directly
+if (process.argv[1] && process.argv[1].endsWith('check-tests.ts')) {
+  checkTests();
+}
