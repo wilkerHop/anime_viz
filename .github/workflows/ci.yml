@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,6 +44,8 @@ jobs:
             echo "Found TypeScript sins! Please remove them."
             exit 1
           fi
+      - name: Check Test Coverage
+        run: npm run check:tests
       - name: Type Check
         run: npx tsc --noEmit
 
