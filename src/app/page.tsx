@@ -181,9 +181,17 @@ export default async function Home({
               {scoreData.length > 0 ? (
                 <ScoreDistribution data={scoreData} />
               ) : (
-                <div className="h-[400px] flex items-center justify-center text-brutal-black/50">
-                  <p className="font-bold uppercase">No score data available</p>
-                </div>
+                <div className="flex gap-4">
+              <Button variant="outline" size="lg" asChild className="hidden md:flex">
+                <Link href="/search">Search Database</Link>
+              </Button>
+              <div className="text-right hidden md:block">
+                <p className="text-sm font-bold text-brutal-black/60">LAST UPDATED</p>
+                <p className="font-mono font-bold">
+                  {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+            </div>
               )}
             </CardContent>
           </Card>
