@@ -206,8 +206,8 @@ jobs:
               repo: context.repo.repo,
               title: `🔴 CI Failure: ${failedJobs} (${shortSha})`,
               body: issueBody,
-              labels: ['ci-failure', 'bug', 'automated'],
-              assignees: ['copilot']
+              labels: ['ci-failure', 'bug', 'automated']
+              // assignees: ['copilot'] - Cannot assign to copilot app user
             });
             
             console.log(`Created issue #${issue.number}: ${issue.html_url}`);

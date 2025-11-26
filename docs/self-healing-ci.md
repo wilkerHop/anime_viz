@@ -37,8 +37,9 @@ Creates a detailed GitHub issue containing:
 - `automated` - Indicates auto-generated
 
 **Auto-Assignment:**
-- Issue is automatically assigned to `@copilot`
+- Issue mentions `@copilot` in the body
 - Copilot receives notification to analyze and fix
+- (Note: Direct assignment to copilot user is not supported)
 
 ### 4. Additional Context
 A follow-up comment is added with:
