@@ -319,6 +319,27 @@ export async function getAnimeFromDatabase(malId: number) {
 }
 
 /**
+ * Get featured anime (top popularity) from database
+ */
+export async function getFeaturedAnime(limit = 6) {
+  return prisma.anime.findMany({
+    take: limit,
+    orderBy: {
+      popularity: 'asc', // Lower is better for rank/popularity
+    },
+    include: {
+      genres: true,
+    },
+    where: {
+      popularity: {
+        not: null,
+        gt: 0
+      }
+    }
+  });
+}
+
+/**
  * Cleanup - close Prisma connection
  */
 export async function disconnect(): Promise<void> {

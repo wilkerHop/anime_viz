@@ -5,10 +5,59 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import UpdateControlsWrapper from '@/components/UpdateControlsWrapper';
 import { getGenreConnections, getLastUpdated } from '@/lib/db/cache';
+import { getFeaturedAnime } from '@/lib/services/jikan-service';
+import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
+
+async function FeaturedAnimeSection() {
+  const featured = await getFeaturedAnime(6);
+  
+  if (featured.length === 0) return null;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-3xl font-black uppercase tracking-tight text-brutal-black border-l-8 border-brutal-pink pl-4">
+        Featured Anime
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featured.map((anime) => (
+          <Link key={anime.id} href={`/anime/${anime.id}`} className="group block">
+            <div className="bg-white border-4 border-brutal-black shadow-brutal hover:shadow-brutal-lg hover:-translate-y-1 transition-all duration-200 h-full flex flex-col">
+              <div className="relative h-48 w-full border-b-4 border-brutal-black overflow-hidden">
+                <Image 
+                  src={anime.mainPicture || '/placeholder.jpg'} 
+                  alt={anime.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-2 right-2">
+                  <Badge variant="warning" className="shadow-brutal-sm">
+                    #{anime.popularity}
+                  </Badge>
+                </div>
+              </div>
+              <div className="p-4 flex flex-col flex-grow">
+                <h3 className="text-xl font-black uppercase leading-tight mb-2 line-clamp-2 group-hover:text-brutal-pink transition-colors">
+                  {anime.title}
+                </h3>
+                <div className="flex flex-wrap gap-2 mt-auto">
+                  {anime.genres.slice(0, 3).map(g => (
+                    <span key={g.id} className="text-xs font-bold uppercase bg-brutal-bg px-2 py-1 border border-brutal-black">
+                      {g.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default async function Home({ 
   searchParams,
@@ -94,6 +143,9 @@ export default async function Home({
             </CardContent>
           </Card>
         </div>
+
+        {/* Featured Anime */}
+        <FeaturedAnimeSection />
 
         {/* Footer */}
         <div className="bg-brutal-black text-brutal-white border-4 border-brutal-black shadow-brutal-lg p-6">
