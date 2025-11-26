@@ -1,8 +1,8 @@
 "use client";
 
+import { BrutalTheme } from '@/lib/charts/brutal-theme';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5flow from "@amcharts/amcharts5/flow";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import { useLayoutEffect, useRef } from 'react';
 
 type GenreConnection = {
@@ -19,8 +19,9 @@ export default function GenreNetwork({ data }: { data: GenreConnection[] }) {
 
     const root = am5.Root.new(chartRef.current);
 
+    // Apply brutal theme
     root.setThemes([
-      am5themes_Animated.new(root)
+      BrutalTheme.new(root)
     ]);
 
     // Transform data for Chord Diagram or Force Directed

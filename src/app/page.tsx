@@ -1,10 +1,16 @@
 import GenreNetwork from '@/components/charts/GenreNetwork';
+import ScoreDistribution from '@/components/charts/ScoreDistribution';
+import SeasonalTrends from '@/components/charts/SeasonalTrends';
+import StudioNetwork from '@/components/charts/StudioNetwork';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import UpdateControlsWrapper from '@/components/UpdateControlsWrapper';
 import { getGenreConnections, getLastUpdated } from '@/lib/db/cache';
+import { getScoreDistribution } from '@/lib/db/score-data';
+import { getSeasonalTrends } from '@/lib/db/seasonal-data';
+import { getTopStudios } from '@/lib/db/studio-data';
 import { getFeaturedAnime } from '@/lib/services/jikan-service';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -69,7 +75,21 @@ export default async function Home({
   
   // Fetch data
   const connections = await getGenreConnections(context);
-  const lastUpdated = await getLastUpdated(user || 'global_mock');
+  const lastUpdated = await getLastUpdated(context);
+  
+  // Fetch visualization data
+  const scoreData = await getScoreDistribution();
+  const seasonalData = await getSeasonalTrends();
+  const topStudios = await getTopStudios(10);
+  
+  // Transform studio data for pack chart
+  const studioNetworkData = {
+    name: "Studios",
+    children: topStudios.map(studio => ({
+      name: studio.name,
+      value: studio.animeCount,
+    }))
+  };
 
   return (
     <main className="min-h-screen bg-brutal-bg p-4 md:p-8">
@@ -146,6 +166,66 @@ export default async function Home({
 
         {/* Featured Anime */}
         <FeaturedAnimeSection />
+
+        {/* Data Visualizations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Score Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Score Distribution</CardTitle>
+              <CardDescription>
+                Distribution of anime scores across all entries
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {scoreData.length > 0 ? (
+                <ScoreDistribution data={scoreData} />
+              ) : (
+                <div className="h-[400px] flex items-center justify-center text-brutal-black/50">
+                  <p className="font-bold uppercase">No score data available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Studio Network */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Studios</CardTitle>
+              <CardDescription>
+                Most prolific anime studios by production count
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {studioNetworkData.children.length > 0 ? (
+                <StudioNetwork data={studioNetworkData} />
+              ) : (
+                <div className="h-[500px] flex items-center justify-center text-brutal-black/50">
+                  <p className="font-bold uppercase">No studio data available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Seasonal Trends */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Seasonal Release Trends</CardTitle>
+            <CardDescription>
+              Number of anime released per season over time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {seasonalData.length > 0 ? (
+              <SeasonalTrends data={seasonalData} />
+            ) : (
+              <div className="h-[400px] flex items-center justify-center text-brutal-black/50">
+                <p className="font-bold uppercase">No seasonal data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Footer */}
         <div className="bg-brutal-black text-brutal-white border-4 border-brutal-black shadow-brutal-lg p-6">
