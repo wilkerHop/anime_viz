@@ -37,11 +37,28 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
           </div>
 
           <div className="flex flex-wrap gap-3 my-2">
+            {anime.year && (
+              <Badge variant="outline" className="text-sm">
+                {anime.year}
+              </Badge>
+            )}
+            {anime.season && (
+              <Badge variant="outline" className="text-sm capitalize">
+                {anime.season}
+              </Badge>
+            )}
             {anime.genres.map((genre) => (
               <Badge key={genre.id} variant="outline" className="text-sm">
                 {genre.name}
               </Badge>
             ))}
+            {anime.companies
+              .filter((c) => c.type === 'Studio')
+              .map((c) => (
+                <Badge key={c.company.id} variant="outline" className="text-sm bg-brutal-yellow">
+                  {c.company.name}
+                </Badge>
+              ))}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-auto">
