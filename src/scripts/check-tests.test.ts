@@ -1,9 +1,13 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
-import { checkTests, EXPORTED_FUNCTION_REGEX, getChangedFiles, hasExportedFunction } from './check-tests';
+import { glob } from 'glob';
+import { checkTests, EXPORTED_FUNCTION_REGEX, getAllSrcFiles, hasExportedFunction } from './check-tests';
 
 jest.mock('fs');
-jest.mock('child_process');
+jest.mock('glob', () => ({
+  glob: {
+    sync: jest.fn(),
+  },
+}));
 
 describe('check-tests script', () => {
   const mockExit = jest.spyOn(process, 'exit').mockImplementation((code) => {
@@ -14,7 +18,6 @@ describe('check-tests script', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (execSync as jest.Mock).mockReturnValue('');
     (fs.readFileSync as jest.Mock).mockReturnValue('');
     (fs.existsSync as jest.Mock).mockReturnValue(true);
   });
@@ -40,18 +43,12 @@ describe('check-tests script', () => {
     });
   });
 
-  describe('getChangedFiles', () => {
-    it('should return list of changed files', () => {
-      (execSync as jest.Mock).mockReturnValue('file1.ts\nfile2.ts\n');
-      const files = getChangedFiles();
+  describe('getAllSrcFiles', () => {
+    it('should return list of files from glob', () => {
+      (glob.sync as jest.Mock).mockReturnValue(['src/file1.ts', 'src/file2.tsx']);
+      const files = getAllSrcFiles();
       expect(files).toHaveLength(2);
-      expect(files[0]).toContain('file1.ts');
-    });
-
-    it('should handle empty output', () => {
-      (execSync as jest.Mock).mockReturnValue('');
-      const files = getChangedFiles();
-      expect(files).toHaveLength(0);
+      expect(files).toContain('src/file1.ts');
     });
   });
 
@@ -68,19 +65,19 @@ describe('check-tests script', () => {
   });
 
   describe('checkTests', () => {
-    it('should pass if all changed files have tests', () => {
-      (execSync as jest.Mock).mockReturnValue('src/foo.ts\n');
+    it('should pass if all files have tests', () => {
+      (glob.sync as jest.Mock).mockReturnValue(['src/foo.ts']);
       (fs.readFileSync as jest.Mock).mockReturnValue('export function foo() {}');
       (fs.existsSync as jest.Mock).mockReturnValue(true); // foo.test.ts exists
 
       checkTests();
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All changed files have corresponding test suites'));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All applicable files have corresponding test suites'));
       expect(mockExit).not.toHaveBeenCalled();
     });
 
-    it('should fail if a changed file is missing test', () => {
-      (execSync as jest.Mock).mockReturnValue('src/foo.ts\n');
+    it('should fail if a file is missing test', () => {
+      (glob.sync as jest.Mock).mockReturnValue(['src/foo.ts']);
       (fs.readFileSync as jest.Mock).mockReturnValue('export function foo() {}');
       (fs.existsSync as jest.Mock).mockReturnValue(false); // foo.test.ts missing
 
@@ -89,23 +86,17 @@ describe('check-tests script', () => {
       expect(mockConsoleError).toHaveBeenCalledWith(expect.stringContaining('missing test suites'));
     });
 
-    it('should ignore non-ts files', () => {
-      (execSync as jest.Mock).mockReturnValue('src/foo.css\n');
+    it('should ignore script files', () => {
+      (glob.sync as jest.Mock).mockReturnValue(['src/scripts/foo.ts']);
       checkTests();
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All changed files have corresponding test suites'));
-    });
-
-    it('should ignore test files', () => {
-      (execSync as jest.Mock).mockReturnValue('src/foo.test.ts\n');
-      checkTests();
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All changed files have corresponding test suites'));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All applicable files have corresponding test suites'));
     });
     
     it('should ignore Next.js page files', () => {
-      (execSync as jest.Mock).mockReturnValue('src/app/page.ts\n');
+      (glob.sync as jest.Mock).mockReturnValue(['src/app/page.tsx']);
       (fs.readFileSync as jest.Mock).mockReturnValue('export default function Page() {}');
       checkTests();
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All changed files have corresponding test suites'));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('All applicable files have corresponding test suites'));
     });
   });
 });
