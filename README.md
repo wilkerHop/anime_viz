@@ -81,6 +81,25 @@ The project uses a custom "Brutal" theme defined in Tailwind config:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 🧪 Testing
+
+This project enforces a comprehensive testing strategy to ensure reliability.
+
+### Unit Tests
+We use **Jest** and **React Testing Library** for unit testing.
+- Run all tests: `npm test`
+- Watch mode: `npm test -- --watch`
+
+### Test Enforcement
+We have a custom script to ensure every file with exported functions has a corresponding test file.
+- Run check: `npm run check:tests`
+
+This check is integrated into our CI/CD pipeline.
+
+## 🤝 Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
