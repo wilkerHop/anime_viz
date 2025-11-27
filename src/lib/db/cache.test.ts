@@ -16,6 +16,7 @@ jest.mock('@/lib/db', () => ({
     },
     anime: {
       upsert: jest.fn(),
+      update: jest.fn(),
       findMany: jest.fn(),
     },
     genreConnection: {
